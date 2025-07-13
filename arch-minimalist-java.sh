@@ -37,3 +37,43 @@ fi
 
 
 echo "✅ System bootstrap complete!"
+
+
+################OH MY POST ###################################
+
+echo "🎨 Installing oh-my-posh and setting powerline theme..."
+yay -S --noconfirm oh-my-posh
+
+# Create theme directory under ~/.config
+mkdir -p ~/.config/oh-my-posh
+cp /usr/share/oh-my-posh/themes/powerline.omp.json ~/.config/oh-my-posh/
+chmod 644 ~/.config/oh-my-posh/powerline.omp.json
+
+# Add oh-my-posh init to .bashrc if not already present
+if ! grep -q "oh-my-posh init" ~/.bashrc; then
+cat << 'EOF' >> ~/.bashrc
+
+# ── oh-my-posh Prompt ────────────────────────────────
+eval "$(oh-my-posh init bash --config ~/.config/oh-my-posh/powerline.omp.json)"
+EOF
+fi
+
+################ALIASES ###################################
+
+echo "🧩 Adding common bash aliases..."
+cat << 'EOF' >> ~/.bashrc
+
+# ── Custom Dev Aliases ───────────────────────────────
+alias ll='exa -al --git'
+alias gs='git status'
+alias ga='git add .'
+alias gc='git commit -m'
+alias gp='git push'
+alias gco='git checkout'
+alias cat='bat'
+alias grep='rg'
+alias cd..='cd ..'
+EOF
+
+
+
