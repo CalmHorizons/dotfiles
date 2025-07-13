@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "🛠️ Installing base packages..."
+echo "🛠️ Updating system and installing base packages..."
 sudo pacman -Syu --noconfirm
-sudo pacman -S --noconfirm base-devel git curl wget openssh sudo
+sudo pacman -S --noconfirm base-devel git curl wget unzip openssh sudo stylua
 
 echo "🔌 Enabling and starting SSH server..."
 sudo systemctl enable --now sshd
@@ -20,7 +20,7 @@ fi
 
 echo "📦 Installing development packages with yay..."
 yay -S --noconfirm \
-    jdk-openjdk maven gradle \
+    jdk-openjdk maven gradle jdtls \
     neovim \
     nodejs npm python python-pip \
     fzf ripgrep fd bat exa tmux \
@@ -35,45 +35,53 @@ else
     echo "⚠️ Neovim config already exists at ~/.config/nvim"
 fi
 
+echo "🛠️ Configuring Neovim to auto-install jdtls via Mason..."
+mkdir -p ~/.config/nvim/lua/custom/plugins
 
-echo "✅ System bootstrap complete!"
-
-
-################OH MY POST ###################################
-
-echo "🎨 Installing oh-my-posh and setting powerline theme..."
-yay -S --noconfirm oh-my-posh
-
-# Create theme directory under ~/.config
-mkdir -p ~/.config/oh-my-posh
-cp /usr/share/oh-my-posh/themes/powerline.omp.json ~/.config/oh-my-posh/
-chmod 644 ~/.config/oh-my-posh/powerline.omp.json
-
-# Add oh-my-posh init to .bashrc if not already present
-if ! grep -q "oh-my-posh init" ~/.bashrc; then
-cat << 'EOF' >> ~/.bashrc
-
-# ── oh-my-posh Prompt ────────────────────────────────
-eval "$(oh-my-posh init bash --config ~/.config/oh-my-posh/powerline.omp.json)"
+cat > ~/.config/nvim/lua/custom/plugins/mason-lspconfig.lua <<'EOF'
+return {
+  "williamboman/mason-lspconfig.nvim",
+  opts = {
+    ensure_installed = {
+      "jdtls",
+    },
+  },
+}
+}
 EOF
+
+echo "📦 Triggering Neovim plugin sync..."
+nvim --headless "+Lazy! sync" +qa
+
+echo "🔧 Exporting TERM variable for full terminal support..."
+if ! grep -q "export TERM=xterm-256color" ~/.bashrc; then
+    echo 'export TERM=xterm-256color' >> ~/.bashrc
 fi
 
-################ALIASES ###################################
+echo "🖌️ Installing Oh My Posh with powerline theme..."
 
-echo "🧩 Adding common bash aliases..."
-cat << 'EOF' >> ~/.bashrc
+if ! command -v oh-my-posh &> /dev/null; then
+    yay -S --noconfirm oh-my-posh
+fi
 
-# ── Custom Dev Aliases ───────────────────────────────
-alias ll='exa -al --git'
+mkdir -p ~/.config/oh-my-posh
+curl -fsSL https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/powerline.omp.json -o ~/.config/oh-my-posh/powerline.omp.json
+
+# Add to .bashrc if not already there
+if ! grep -q "eval \"\$(oh-my-posh init bash --config ~/.config/oh-my-posh/powerline.omp.json)\"" ~/.bashrc; then
+    echo 'eval "$(oh-my-posh init bash --config ~/.config/oh-my-posh/powerline.omp.json)"' >> ~/.bashrc
+fi
+
+echo "🛠️ Adding useful aliases to ~/.bashrc..."
+cat >> ~/.bashrc <<'ALIAS_EOF'
+
+# Custom Aliases
+alias ll='ls -lha --color=auto'
 alias gs='git status'
-alias ga='git add .'
-alias gc='git commit -m'
-alias gp='git push'
-alias gco='git checkout'
-alias cat='bat'
-alias grep='rg'
-alias cd..='cd ..'
-EOF
+alias gp='git pull'
+alias gc='git commit'
+alias gl='git log --oneline --graph --decorate'
 
+ALIAS_EOF
 
-
+echo "✅ Bootstrap complete! Please restart your terminal or run 'source ~/.bashrc'"
