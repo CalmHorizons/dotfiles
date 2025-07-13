@@ -20,13 +20,12 @@ fi
 
 echo "📦 Installing development packages with yay..."
 yay -S --noconfirm \
-    jdk-openjdk jre-openjdk maven gradle \
+    jdk-openjdk maven gradle \
     neovim \
     nodejs npm python python-pip \
     fzf ripgrep fd bat exa tmux \
     man-db man-pages \
-    reflector \
-    ufw fail2ban
+    reflector
 
 echo "🧠 Bootstrapping Neovim kickstart config..."
 if [[ ! -d "$HOME/.config/nvim" ]]; then
@@ -36,9 +35,5 @@ else
     echo "⚠️ Neovim config already exists at ~/.config/nvim"
 fi
 
-echo "🔧 Setting up firewall..."
-sudo ufw allow ssh
-sudo ufw enable
-sudo systemctl enable --now ufw
 
 echo "✅ System bootstrap complete!"
