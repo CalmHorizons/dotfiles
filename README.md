@@ -1,5 +1,5 @@
 # dotfiles
-Dot files and installation scripts (Quality of Life Improvements)
+Dot files and bootstrap scripts (Quality of Life Improvements)
 
 Arch Minimalist Java Development Script
 ```bash
