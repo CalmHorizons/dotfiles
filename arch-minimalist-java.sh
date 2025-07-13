@@ -85,3 +85,47 @@ alias gl='git log --oneline --graph --decorate'
 ALIAS_EOF
 
 echo "✅ Bootstrap complete! Please restart your terminal or run 'source ~/.bashrc'"
+
+
+
+
+echo "[*] Installing TPM (Tmux Plugin Manager)..."
+TPM_DIR="$HOME/.tmux/plugins/tpm"
+if [ ! -d "$TPM_DIR" ]; then
+  git clone https://github.com/tmux-plugins/tpm "$TPM_DIR"
+else
+  echo "[✓] TPM already installed."
+fi
+
+echo "[*] Writing ~/.tmux.conf with Catppuccin theme..."
+cat > ~/.tmux.conf <<EOF
+# Set prefix to Ctrl-a
+unbind C-b
+set -g prefix C-a
+bind C-a send-prefix
+
+# Reload config with prefix + r
+bind r source-file ~/.tmux.conf \; display-message "Config reloaded!"
+
+# TPM plugins
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'catppuccin/tmux'
+
+# Catppuccin flavor: mocha, frappe, latte, macchiato
+set -g @catppuccin_flavour 'mocha'
+
+# Initialize TPM
+run '~/.tmux/plugins/tpm/tpm'
+EOF
+
+echo "[*] Starting tmux to install plugins via TPM..."
+tmux new-session -d -s temp_session
+sleep 1
+tmux send-keys -t temp_session "tmux source-file ~/.tmux.conf" C-m
+tmux send-keys -t temp_session "~/.tmux/plugins/tpm/bin/install_plugins" C-m
+sleep 2
+tmux kill-session -t temp_session
+
+echo "[✓] Done. Start tmux with: tmux"
+
